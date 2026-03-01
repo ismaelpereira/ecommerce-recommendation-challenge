@@ -122,3 +122,11 @@ cbt -instance=local-instance createfamily events events
 ```bash
 go run main.go
 ```
+
+# 🤖 Running Tests
+
+Run on your terminal
+
+```bash
+go tests -v ./service
+```
