@@ -5,16 +5,15 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ismaelpereira/ecommerce-recommendation-challenge/repository"
 	"github.com/ismaelpereira/ecommerce-recommendation-challenge/types"
 )
 
 type Service struct {
-	btRepository *repository.BtRepository
-	bqRepository *repository.BqRepository
+	btRepository BigTableRepository
+	bqRepository BigQueryRepository
 }
 
-func NewService(btRepository *repository.BtRepository, bqRepository *repository.BqRepository) *Service {
+func NewService(btRepository BigTableRepository, bqRepository BigQueryRepository) *Service {
 	return &Service{
 		btRepository: btRepository,
 		bqRepository: bqRepository,

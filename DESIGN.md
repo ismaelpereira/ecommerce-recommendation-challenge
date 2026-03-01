@@ -91,7 +91,7 @@ To be production ready we can also add a cloud run deploy with CI/CD, but this w
 
 I think I will change Gin Gonic to the Framework you guys use too.
 
-
+I wrote this before write tests, now checking how can I write the services unit tests I will create the interfaces like I did with the service, so we can easily mock the functions and write more tests.
 
 ## Small Conclusion
 
