@@ -22,7 +22,15 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	btClient, err := bigtable.NewClient(ctx, config.ProjectID, config.BigtableInstance)
+	var bigtableIntance string
+
+	if config.Env == "dev" {
+		bigtableIntance = "local-instance"
+	} else {
+		bigtableIntance = config.BigtableInstance
+	}
+
+	btClient, err := bigtable.NewClient(ctx, config.ProjectID, bigtableIntance)
 	if err != nil {
 		log.Fatalf("Unable to start Big Table Client")
 	}

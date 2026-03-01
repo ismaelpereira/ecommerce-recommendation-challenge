@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/ismaelpereira/ecommerce-recommendation-challenge/repository"
 	"github.com/ismaelpereira/ecommerce-recommendation-challenge/types"
@@ -27,7 +28,7 @@ func (s *Service) CreateEvent(ctx context.Context, event types.CreateEventReques
 	}
 	err = s.btRepository.CreateEvent(ctx, event)
 	if err != nil {
-		return fmt.Errorf("Error creating event on Big Query: %w", err)
+		return fmt.Errorf("Error creating event on Big Table: %w", err)
 	}
 	return nil
 }
@@ -50,18 +51,25 @@ func (s *Service) GetEventsFromUser(ctx context.Context, userID string, limit in
 	if err != nil {
 		return nil, fmt.Errorf("Error Getting events from user %s: %w", userID, err)
 	}
-
 	return events, nil
 }
 
 func (s *Service) Ping(ctx context.Context) error {
-	bqErr := s.bqRepository.Ping(ctx)
-	btErr := s.btRepository.Ping(ctx)
+	healthCtx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	defer cancel()
+
+	bqErr := s.bqRepository.Ping(healthCtx)
+	btErr := s.btRepository.Ping(healthCtx)
+
 	if bqErr != nil && btErr == nil {
-		return fmt.Errorf("Error connecting on Big Query\nBigtable Connected!")
+		return fmt.Errorf(`
+		- Error connecting on Big Query
+		- Bigtable Connected!`)
 	}
 	if bqErr == nil && btErr != nil {
-		return fmt.Errorf("Error connecting on Big Table\n Bigquery Connected!")
+		return fmt.Errorf(`
+		- Error connecting on Big Table
+		- Bigquery Connected!`)
 	}
 	if bqErr != nil && btErr != nil {
 		return fmt.Errorf("Error connecting on Big Query and Big Table")
