@@ -8,6 +8,7 @@ import (
 )
 
 type Config struct {
+	Env              string
 	ProjectID        string
 	BigtableInstance string
 	Port             string
@@ -20,6 +21,7 @@ func Load() *Config {
 	}
 
 	cfg := &Config{
+		Env:              os.Getenv("ENV"),
 		ProjectID:        os.Getenv("PROJECT_ID"),
 		BigtableInstance: os.Getenv("BIGTABLE_INSTANCE"),
 	}

@@ -22,7 +22,7 @@ func NewBtRepository(client *cloudbt.Client) *BtRepository {
 
 func (r *BtRepository) CreateEvent(ctx context.Context, event types.CreateEventRequest) error {
 	table := r.client.Open("events")
-	defer r.client.Close()
+
 	rowKey := fmt.Sprintf("user#%s#revts#%d", event.UserID, math.MaxInt64-event.Timestamp.UnixNano())
 
 	data, err := json.Marshal(event)
@@ -38,7 +38,6 @@ func (r *BtRepository) CreateEvent(ctx context.Context, event types.CreateEventR
 
 func (r *BtRepository) GetEventsFromUser(ctx context.Context, userID string, limit int) ([]types.Event, error) {
 	table := r.client.Open("events")
-	defer r.client.Close()
 
 	prefix := fmt.Sprintf("user#%s#", userID)
 
@@ -46,6 +45,7 @@ func (r *BtRepository) GetEventsFromUser(ctx context.Context, userID string, lim
 
 	err := table.ReadRows(ctx, cloudbt.PrefixRange(prefix),
 		func(row cloudbt.Row) bool {
+
 			item := row["events"][0]
 
 			var e types.Event
@@ -58,10 +58,17 @@ func (r *BtRepository) GetEventsFromUser(ctx context.Context, userID string, lim
 	if err != nil {
 		return nil, err
 	}
-
 	return events, nil
 }
 
 func (r *BtRepository) Ping(ctx context.Context) error {
-	return r.client.PingAndWarm(ctx)
+	table := r.client.Open("events")
+
+	_, err := table.ReadRow(ctx, "healthcheck-row")
+
+	if err != nil {
+		return fmt.Errorf("bigtable ping failed: %w", err)
+	}
+
+	return nil
 }

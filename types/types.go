@@ -7,7 +7,7 @@ type CreateEventRequest struct {
 	ProductID string    `json:"product_id" binding:"required"`
 	StoreID   string    `json:"store_id" binding:"required"`
 	EventType string    `json:"event_type" binding:"required,oneof='view' 'add_to_cart' 'purchase'"`
-	Timestamp time.Time `json:"timestamp" binding:"required"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 type GetTopProductsFromStoreResponse struct {
@@ -17,9 +17,8 @@ type GetTopProductsFromStoreResponse struct {
 }
 
 type Product struct {
-	ProductID string `json:"product_id"`
-	Name      string `json:"name"`
-	ViewCount int    `json:"view_count"`
+	ProductID string `json:"product_id" bigquery:"product_id"`
+	ViewCount int    `json:"view_count" bigquery:"view_count"`
 }
 
 type Event struct {

@@ -21,7 +21,7 @@ func NewBqRepository(client *cloudbq.Client) *BqRepository {
 
 func (r *BqRepository) CreateEvent(ctx context.Context, event types.CreateEventRequest) error {
 	query := r.client.Query(`
-		INSERT INTO events(
+		INSERT INTO ecommerce_events.events(
 				user_id,
 				product_id,
 				store_id,
@@ -72,8 +72,8 @@ func (r *BqRepository) GetTopProductsFromStore(ctx context.Context, storeID stri
 			AND event_type = "view"
 			AND timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(),INTERVAL @hours HOUR)
 		GROUP BY product_id
-		GROUP BY view_count DESC
-		LIMIT 10,
+		ORDER BY view_count DESC
+		LIMIT 10
 	`, dataset.DatasetID, table.TableID)
 
 	query := r.client.Query(queryStr)
