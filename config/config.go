@@ -12,6 +12,10 @@ type Config struct {
 	ProjectID        string
 	BigtableInstance string
 	Port             string
+	BigQueryDataset  string
+	BigQueryTable    string
+	BigTableTable    string
+	BigTableFamily   string
 }
 
 func Load() *Config {
@@ -24,6 +28,10 @@ func Load() *Config {
 		Env:              os.Getenv("ENV"),
 		ProjectID:        os.Getenv("PROJECT_ID"),
 		BigtableInstance: os.Getenv("BIGTABLE_INSTANCE"),
+		BigQueryDataset:  os.Getenv("BIGQUERY_DATASET"),
+		BigQueryTable:    os.Getenv("BIGQUERY_TABLE"),
+		BigTableTable:    os.Getenv("BIGTABLE_TABLE"),
+		BigTableFamily:   os.Getenv("BIGTABLE_FAMILY"),
 	}
 	validate(cfg)
 
@@ -37,5 +45,19 @@ func validate(c *Config) {
 
 	if c.BigtableInstance == "" {
 		log.Fatal("BIGTABLE_INSTANCE is required")
+	}
+
+	if c.BigQueryDataset == "" {
+		log.Fatal("BIGQUERY_DATASET is required")
+	}
+
+	if c.BigQueryTable == "" {
+		log.Fatal("BIGQUERY_TABLE is required")
+	}
+	if c.BigTableTable == "" {
+		log.Fatal("BIGTABLE_TABLE is required")
+	}
+	if c.BigTableFamily == "" {
+		log.Fatal("BIGTABLE_FAMILY is required")
 	}
 }

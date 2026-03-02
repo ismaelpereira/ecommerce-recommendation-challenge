@@ -11,17 +11,21 @@ import (
 )
 
 type BtRepository struct {
-	client *cloudbt.Client
+	client     *cloudbt.Client
+	tableName  string
+	familyName string
 }
 
-func NewBtRepository(client *cloudbt.Client) *BtRepository {
+func NewBtRepository(client *cloudbt.Client, tableName string, familyName string) *BtRepository {
 	return &BtRepository{
-		client: client,
+		client:     client,
+		tableName:  tableName,
+		familyName: familyName,
 	}
 }
 
 func (r *BtRepository) CreateEvent(ctx context.Context, event types.CreateEventRequest) error {
-	table := r.client.Open("events")
+	table := r.client.Open(r.tableName)
 
 	rowKey := fmt.Sprintf("user#%s#revts#%d", event.UserID, math.MaxInt64-event.Timestamp.UnixNano())
 
@@ -37,7 +41,7 @@ func (r *BtRepository) CreateEvent(ctx context.Context, event types.CreateEventR
 }
 
 func (r *BtRepository) GetEventsFromUser(ctx context.Context, userID string, limit int) ([]types.Event, error) {
-	table := r.client.Open("events")
+	table := r.client.Open(r.tableName)
 
 	prefix := fmt.Sprintf("user#%s#", userID)
 
@@ -62,7 +66,7 @@ func (r *BtRepository) GetEventsFromUser(ctx context.Context, userID string, lim
 }
 
 func (r *BtRepository) Ping(ctx context.Context) error {
-	table := r.client.Open("events")
+	table := r.client.Open(r.tableName)
 
 	_, err := table.ReadRow(ctx, "healthcheck-row")
 

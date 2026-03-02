@@ -40,9 +40,9 @@ func main() {
 		log.Fatalf("Unable to start Big Query Client")
 	}
 
-	btRepository := repository.NewBtRepository(btClient)
+	btRepository := repository.NewBtRepository(btClient, config.BigTableTable, config.BigTableFamily)
 
-	bqRepository := repository.NewBqRepository(bqClient)
+	bqRepository := repository.NewBqRepository(bqClient, config.BigQueryDataset, config.BigQueryTable)
 
 	service := service.NewService(btRepository, bqRepository)
 
