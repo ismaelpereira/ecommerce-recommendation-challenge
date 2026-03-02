@@ -128,5 +128,44 @@ go run main.go
 Run on your terminal
 
 ```bash
-go tests -v ./service
+go test -v ./...
+```
+
+Running Integration tests
+
+```bash
+go test ./... -v -tags=integration
+```
+
+
+# 🔨 Run Using Makefile
+
+Building the service
+
+```bash
+make build
+```
+
+Running the service
+
+```bash
+make run
+```
+
+Testing the service
+
+```bash
+make test
+```
+
+Running test with coverage
+
+```bash
+make cover
+```
+
+Running Integration test
+
+```bash
+make test-integration
 ```

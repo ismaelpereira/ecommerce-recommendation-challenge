@@ -72,7 +72,7 @@ Reverse timestamp will guarantee the last events appears first. This change the 
 
 ## Error Handling strategy
 
-I choose to treat most of the errors and for the query parameters explicity send the errors, not use default value for limit or for the amount of hours.
+I choose to treat most of the errors and for the query parameters explicity send the errors, not use default value for the amount of hours in case it's empty.
 
 This causes 2 problems:
 
@@ -81,7 +81,11 @@ This causes 2 problems:
 
 **What happens if the BigQuery write succeeds but BigTable write fails?**
 
-With what we have now, we are going to have inconsistent information, unfortunally. But on production I will probably add a event ingestion via Pub/Sub, write only on the Big Query and send to Big Table, so te Big Query is our source of truth. And to avoid problems we can add dead letter queue, with strong retry policy and send the event_id trought the Pub/Sub and use as a idempotency key, so we will not process the same event twice.
+With what we have now, we are going to have inconsistent information, in case of failure. The current implementation performs a synchrounos dual-write. First it writes on the Big Query and them on Big Table. If Big Query succeesds and big table fails, the system will return an error and the information will be already stored on the table. If the user retry the request, we will have duplicated event on the Big Query table.
+
+In production I will add a event ingestion via Pub/Sub, write only on the Big Query and send to Big Table trought a message queue. In this case Big Query is our source of truth.
+
+To avoid problems we can add dead letter queue, with strong retry policy and send the event_id trought the Pub/Sub and use as a idempotency key, so we will not process the same event twice.
 
 ## What you’d add with more time
 
@@ -93,7 +97,9 @@ I think I will change Gin Gonic to the Framework you guys use too.
 
 I wrote this before write tests, now checking how can I write the services unit tests I will create the interfaces like I did with the service, so we can easily mock the functions and write more tests.
 
-Since tests are something I need to improve in Golang, I will write more tests on the handlers, and create a integration test to be more complete and safer to go to production, but for this test I want to be transparent I lack on this. But I will study and on the next few days I will be changing this. 
+Since tests are something I need to improve in Golang, I will write create a integration test to be more complete and safer to go to production.
+
+I will add a package errors with a huge errors events and codes, so on the handlers we can treat better the errors.
 
 ## Environment Variables
 
@@ -110,8 +116,8 @@ BIGTABLE_FAMILY=
 BIGQUERY_DATASET=
 BIGQUERY_TABLE=
 ```
-Right now I made a structure like this, because we only have one single table for Big Query and Big Table, on a production environment I would put something like BIGTABLE_<RESOURCE>_TABLE, so in this case, BIGTABLE_EVENTS_TABLE to be more explicit, but since we are going to work with Microsservices, it will be good to split trought different domains each service to not create a lot of responsability and avoid grow to much this environemnts variable to make the deploy easier and maintainable. 
 
+Right now I made a structure like this, because we only have one single table for Big Query and Big Table, on a production environment I would put something like BIGTABLE\_<RESOURCE>\_TABLE, so in this case, BIGTABLE_EVENTS_TABLE to be more explicit, but since we are going to work with Microsservices, it will be good to split trought different domains each service to not create a lot of responsability and avoid grow to much this environemnts variable to make the deploy easier and maintainable.
 
 ## Small Conclusion
 

@@ -6,15 +6,14 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ismaelpereira/ecommerce-recommendation-challenge/service"
 	"github.com/ismaelpereira/ecommerce-recommendation-challenge/types"
 )
 
 type Handler struct {
-	service *service.Service
+	service Service
 }
 
-func NewHandler(service *service.Service) *Handler {
+func NewHandler(service Service) *Handler {
 	return &Handler{
 		service: service,
 	}
@@ -33,7 +32,8 @@ func (h *Handler) CreateEvent(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"message": "Event saved successfuly", "data": evt})
+
+	c.JSON(http.StatusCreated, gin.H{"event_id": evt.ID})
 }
 
 func (h *Handler) GetTopProductsFromStore(c *gin.Context) {
@@ -52,7 +52,12 @@ func (h *Handler) GetTopProductsFromStore(c *gin.Context) {
 
 	intWindowHours, err := strconv.Atoi(windowHours)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if intWindowHours < 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "query parameter time should no be negative"})
 		return
 	}
 
@@ -61,6 +66,7 @@ func (h *Handler) GetTopProductsFromStore(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
 	c.JSON(http.StatusOK, topProducts)
 }
 
@@ -69,26 +75,30 @@ func (h *Handler) GetEventsFromUser(c *gin.Context) {
 
 	userID := c.Param("user_id")
 	log.Println(userID)
-	if userID == ":user_id" {
+	if userID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "mising user_id path parameter"})
 		return
 	}
 
 	treshold := c.Query("limit")
 	if treshold == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "limit query parameter missing"})
-		return
+		treshold = "20"
 	}
 
 	intTreshold, err := strconv.Atoi(treshold)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	events, err := h.service.GetEventsFromUser(ctx, userID, intTreshold)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if events == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Events not found"})
 		return
 	}
 
