@@ -32,12 +32,12 @@ func (h *Handler) CreateEvent(c *gin.Context) {
 		event.Timestamp = time.Now()
 	}
 
-	err := h.service.CreateEvent(ctx, event)
+	evt, err := h.service.CreateEvent(ctx, event)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(201, gin.H{"message": "Event saved successfuly", "data": event})
+	c.JSON(201, gin.H{"message": "Event saved successfuly", "data": evt})
 }
 
 func (h *Handler) GetTopProductsFromStore(c *gin.Context) {

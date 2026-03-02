@@ -17,9 +17,10 @@ The table schema was the following
 | product_id | STRING    | REQUIRED | -                 |
 | store_id   | STRING    | REQUIRED | -                 |
 | event_type | STRING    | REQUIRED | -                 |
-| timestamp  | TIMESTAMP | NULLABLE | CURRENT_TIMESTAMP |
+| timestamp  | TIMESTAMP | REQUIRED | CURRENT_TIMESTAMP |
 
-- event_id -> I put a UUID because usualy I used sequencial numbers to be fast to read, but on the documentation nothing like this was there
+- event_id -> I put a UUID because usualy I used sequencial numbers to be fast to read, but on the documentation nothing like this was there. I am generating this on the application level too so we can easily return on the request with the 201 code.
+
 
 - timestamp -> I put as a default value the current date, but on the request is necessary so I also treat this on the code
 
