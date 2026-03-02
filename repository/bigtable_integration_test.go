@@ -50,7 +50,8 @@ func TestBigtableIntegration_CreateAndRead(t *testing.T) {
 
 	now := time.Now()
 
-	event := types.CreateEventRequest{
+	event := &types.Event{
+		ID: "event_1",
 		UserID:    "user_1",
 		ProductID: "product_1",
 		StoreID:   "store_1",

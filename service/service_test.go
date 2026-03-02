@@ -16,7 +16,7 @@ type mockBT struct {
 	pingErr   error
 }
 
-func (m *mockBT) CreateEvent(ctx context.Context, event types.CreateEventRequest) error {
+func (m *mockBT) CreateEvent(ctx context.Context, event *types.Event) error {
 	return m.createErr
 }
 
@@ -37,8 +37,8 @@ type mockBQ struct {
 	pingErr   error
 }
 
-func (m *mockBQ) CreateEvent(ctx context.Context, event types.CreateEventRequest) (*types.Event, error) {
-	return &types.Event{}, m.createErr
+func (m *mockBQ) CreateEvent(ctx context.Context, event *types.Event) error {
+	return m.createErr
 }
 
 func (m *mockBQ) GetTopProductsFromStore(ctx context.Context, storeID string, windowHours int) ([]types.Product, error) {

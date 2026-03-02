@@ -24,10 +24,10 @@ func NewBtRepository(client *cloudbt.Client, tableName string, familyName string
 	}
 }
 
-func (r *BtRepository) CreateEvent(ctx context.Context, event types.CreateEventRequest) error {
+func (r *BtRepository) CreateEvent(ctx context.Context, event *types.Event) error {
 	table := r.client.Open(r.tableName)
 
-	rowKey := fmt.Sprintf("user#%s#revts#%d", event.UserID, math.MaxInt64-event.Timestamp.UnixNano())
+	rowKey := fmt.Sprintf("user#%s#revts#%d#evt#%s", event.UserID, math.MaxInt64-event.Timestamp.UnixNano(), event.ID)
 
 	data, err := json.Marshal(event)
 	if err != nil {
@@ -35,7 +35,7 @@ func (r *BtRepository) CreateEvent(ctx context.Context, event types.CreateEventR
 	}
 
 	mut := cloudbt.NewMutation()
-	mut.Set("events", "data", cloudbt.Now(), data)
+	mut.Set(r.tableName, r.familyName, cloudbt.Now(), data)
 
 	return table.Apply(ctx, rowKey, mut)
 }
@@ -50,7 +50,7 @@ func (r *BtRepository) GetEventsFromUser(ctx context.Context, userID string, lim
 	err := table.ReadRows(ctx, cloudbt.PrefixRange(prefix),
 		func(row cloudbt.Row) bool {
 
-			item := row["events"][0]
+			item := row[r.familyName][0]
 
 			var e types.Event
 			if err := json.Unmarshal(item.Value, &e); err == nil {

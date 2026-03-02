@@ -91,6 +91,11 @@ func (h *Handler) GetEventsFromUser(c *gin.Context) {
 		return
 	}
 
+	if intTreshold < 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "limit query parameter should not be negative"})
+		return
+	}
+
 	events, err := h.service.GetEventsFromUser(ctx, userID, intTreshold)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -98,7 +103,7 @@ func (h *Handler) GetEventsFromUser(c *gin.Context) {
 	}
 
 	if events == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Events not found"})
+		c.JSON(http.StatusOK, []types.Event{})
 		return
 	}
 

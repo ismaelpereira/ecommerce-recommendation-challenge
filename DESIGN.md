@@ -62,13 +62,31 @@ So this are going to reduce the cost and the query reduction time
 
 ## Bigtable Decisions
 
-The key for the row on Bigtable is `user#{user_id}#revts#{reverse_timestamp}`.Because if we are selecing one specific row we are going to get O(1) complexity and if we are searching for a event on specif time O(n) with n being the amount of user events since it will group all user events together
+The key for the row on Bigtable is defined as `user#{user_id}#revts#{reverse_timestamp}#evt%s`.
 
-The tradeoff is that we can't query by specific product or store, but Big Query is handling this. We can also not search by event_id, but again, big query are going to handle this, if we want to guarantee uniqueness we can have a key `#event_id` as a prefix or suffix.
+Where:
+
+- `user_id` → ensures events are grouped by user
+- `revts` → Reverse timestamp `math.MaxInt64 - event.Timestamp.UnixNano()`
+- `event_id` → guarantees uniqueness and enables idempotency
+
+If we are selecing one specific row we are going to get O(1) complexity and if we are searching for a event on specif time O(n) with n being the amount of user events since it will group all user events together
+
+**Why Include `event_id`?**
+
+Use only `user#{user_id}#revts#{reverse_timestamp}` will create a _data-loss risk_. 
+
+If two events from the same user share the same timestamp, the second event that will arrive will overwrite the first causing a data-loss
+
+With this format we guarante Row Key uniqueness, no same-time write overwrite, safe retry policy using `event_id` as idempotency key and a correlation with Big Query.
 
 **Why Reverse Timestamp?**
 
-Reverse timestamp will guarantee the last events appears first. This change the structure to a LIFO, instead of a FIFO too
+Reverse timestamp will guarantee the last events appears first. This change the structure to a LIFO, instead of a FIFO too alowing more efficience on retrieving the last event without scanning the entire table.
+
+### Tradeoffs 
+
+This schema does not support efficient queries by `product_id`, `store_id` or `event_type`. But for this specific case, we are using the Big Query to agreggate ths information
 
 ## Error Handling strategy
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/ismaelpereira/ecommerce-recommendation-challenge/types"
 )
 
@@ -20,8 +21,16 @@ func NewService(btRepository BigTableRepository, bqRepository BigQueryRepository
 	}
 }
 
-func (s *Service) CreateEvent(ctx context.Context, event types.CreateEventRequest) (*types.Event, error) {
-	evt, err := s.bqRepository.CreateEvent(ctx, event)
+func (s *Service) CreateEvent(ctx context.Context, req types.CreateEventRequest) (*types.Event, error) {
+	event := &types.Event{
+		ID:        uuid.NewString(),
+		UserID:    req.UserID,
+		ProductID: req.ProductID,
+		StoreID:   req.StoreID,
+		EventType: req.EventType,
+		Timestamp: req.Timestamp,
+	}
+	err := s.bqRepository.CreateEvent(ctx, event)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating event on Big Query: %w", err)
 	}
@@ -29,7 +38,7 @@ func (s *Service) CreateEvent(ctx context.Context, event types.CreateEventReques
 	if err != nil {
 		return nil, fmt.Errorf("Error creating event on Big Table: %w", err)
 	}
-	return evt, nil
+	return event, nil
 }
 
 func (s *Service) GetTopProductsFromStore(ctx context.Context, storeID string, windowHours int) (*types.GetTopProductsFromStoreResponse, error) {
