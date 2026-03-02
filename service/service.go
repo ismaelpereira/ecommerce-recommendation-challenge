@@ -53,25 +53,33 @@ func (s *Service) GetEventsFromUser(ctx context.Context, userID string, limit in
 	return events, nil
 }
 
-func (s *Service) Ping(ctx context.Context) error {
-	healthCtx, cancel := context.WithTimeout(ctx, 1*time.Second)
+func (s *Service) Ping(ctx context.Context) (*types.PingErrorResponse, error) {
+	healthCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	bqErr := s.bqRepository.Ping(healthCtx)
 	btErr := s.btRepository.Ping(healthCtx)
 
 	if bqErr != nil && btErr == nil {
-		return fmt.Errorf(`
-		- Error connecting on Big Query
-		- Bigtable Connected!`)
+		return &types.PingErrorResponse{
+			Message:       "Big Query Connection Error",
+			BigQueryError: bqErr.Error(),
+		}, bqErr
 	}
 	if bqErr == nil && btErr != nil {
-		return fmt.Errorf(`
-		- Error connecting on Big Table
-		- Bigquery Connected!`)
+		return &types.PingErrorResponse{
+			Message:       "Big Table Connection Error",
+			BigTableError: btErr.Error(),
+		}, btErr
 	}
 	if bqErr != nil && btErr != nil {
-		return fmt.Errorf("Error connecting on Big Query and Big Table")
+		return &types.PingErrorResponse{
+			Message:       "Both Big Table and Bigtable services are down",
+			BigTableError: btErr.Error(),
+			BigQueryError: bqErr.Error(),
+		}, bqErr
 	}
-	return nil
+	return &types.PingErrorResponse{
+		Message: "All services connected successfully",
+	}, nil
 }

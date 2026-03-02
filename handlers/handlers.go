@@ -97,13 +97,11 @@ func (h *Handler) GetEventsFromUser(c *gin.Context) {
 func (h *Handler) HealthCheck(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	err := h.service.Ping(ctx)
+	response, err := h.service.Ping(ctx)
 	if err != nil {
-		c.JSON(503, err.Error())
+		c.JSON(503, response)
 		return
 	}
 
-	c.JSON(200, gin.H{
-		"message": "All services connected successfuly",
-	})
+	c.JSON(200, response)
 }

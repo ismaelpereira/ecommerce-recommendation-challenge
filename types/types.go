@@ -29,3 +29,9 @@ type Event struct {
 	EventType string    `json:"event_type"`
 	Timestamp time.Time `json:"timestamp"`
 }
+
+type PingErrorResponse struct {
+	Message       string `json:"message"`
+	BigQueryError string `json:"bigquery_error,omitempty"`
+	BigTableError string `json:"bigtable_error,omitempty"`
+}
