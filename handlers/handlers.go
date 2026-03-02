@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"log"
+	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -23,16 +24,16 @@ func (h *Handler) CreateEvent(c *gin.Context) {
 
 	var event types.CreateEventRequest
 	if err := c.ShouldBindJSON(&event); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	evt, err := h.service.CreateEvent(ctx, event)
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(201, gin.H{"message": "Event saved successfuly", "data": evt})
+	c.JSON(http.StatusCreated, gin.H{"message": "Event saved successfuly", "data": evt})
 }
 
 func (h *Handler) GetTopProductsFromStore(c *gin.Context) {
@@ -40,27 +41,27 @@ func (h *Handler) GetTopProductsFromStore(c *gin.Context) {
 
 	storeID := c.Query("store_id")
 	if storeID == "" {
-		c.JSON(400, gin.H{"error": "store_id query parameter missing"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "store_id query parameter missing"})
 		return
 	}
 	windowHours := c.Query("hours")
 	if windowHours == "" {
-		c.JSON(400, gin.H{"error": "hours query parameter missing"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "hours query parameter missing"})
 		return
 	}
 
 	intWindowHours, err := strconv.Atoi(windowHours)
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	topProducts, err := h.service.GetTopProductsFromStore(ctx, storeID, intWindowHours)
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(200, topProducts)
+	c.JSON(http.StatusOK, topProducts)
 }
 
 func (h *Handler) GetEventsFromUser(c *gin.Context) {
@@ -69,29 +70,29 @@ func (h *Handler) GetEventsFromUser(c *gin.Context) {
 	userID := c.Param("user_id")
 	log.Println(userID)
 	if userID == ":user_id" {
-		c.JSON(400, gin.H{"error": "mising user_id path parameter"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "mising user_id path parameter"})
 		return
 	}
 
 	treshold := c.Query("limit")
 	if treshold == "" {
-		c.JSON(400, gin.H{"error": "limit query parameter missing"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "limit query parameter missing"})
 		return
 	}
 
 	intTreshold, err := strconv.Atoi(treshold)
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	events, err := h.service.GetEventsFromUser(ctx, userID, intTreshold)
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(200, events)
+	c.JSON(http.StatusOK, events)
 }
 
 func (h *Handler) HealthCheck(c *gin.Context) {
@@ -99,9 +100,9 @@ func (h *Handler) HealthCheck(c *gin.Context) {
 
 	response, err := h.service.Ping(ctx)
 	if err != nil {
-		c.JSON(503, response)
+		c.JSON(http.StatusServiceUnavailable, response)
 		return
 	}
 
-	c.JSON(200, response)
+	c.JSON(http.StatusOK, response)
 }

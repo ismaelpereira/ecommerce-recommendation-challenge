@@ -11,7 +11,6 @@ type Config struct {
 	Env              string
 	ProjectID        string
 	BigtableInstance string
-	Port             string
 	BigQueryDataset  string
 	BigQueryTable    string
 	BigTableTable    string
