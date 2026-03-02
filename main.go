@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ismaelpereira/ecommerce-recommendation-challenge/bigquery"
@@ -55,8 +57,13 @@ func main() {
 	r.GET("/events/user/:user_id", handlers.GetEventsFromUser)
 	r.GET("/health", handlers.HealthCheck)
 
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: r,
+	}
+
 	go func() {
-		if err := r.Run(); err != nil {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("failed to run server: %v", err)
 		}
 	}()
@@ -66,7 +73,19 @@ func main() {
 	<-ctx.Done()
 	log.Println("shutdown signal received")
 
-	btClient.Close()
-	bqClient.Close()
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		log.Printf("server shutdown failed: %v\n", err)
+	}
+
+	if err := btClient.Close(); err != nil {
+		log.Printf("Big Table close failed: %v\n", err)
+	}
+	if err := bqClient.Close(); err != nil {
+		log.Printf("Big Query close failed: %v\n", err)
+	}
+
+	log.Println("server exited properly")
 
 }
