@@ -159,31 +159,34 @@ func TestPing_Success(t *testing.T) {
 
 	svc := service.NewService(bt, bq)
 
-	err := svc.Ping(context.Background())
+	msg, err := svc.Ping(context.Background())
 
 	assert.NoError(t, err)
+	assert.Equal(t, "All services connected successfully", msg.Message)
 }
 
 func TestPing_BigQueryFails(t *testing.T) {
 	bt := &mockBT{}
-	bq := &mockBQ{pingErr: errors.New("bq down")}
+	bq := &mockBQ{pingErr: errors.New("Big Query Connection Error")}
 
 	svc := service.NewService(bt, bq)
 
-	err := svc.Ping(context.Background())
+	msg, err := svc.Ping(context.Background())
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Big Query")
+	assert.Equal(t, "Big Query Connection Error", msg.Message)
 }
 
 func TestPing_BigTableFails(t *testing.T) {
-	bt := &mockBT{pingErr: errors.New("bt down")}
+	bt := &mockBT{pingErr: errors.New("Big Table Connection Error")}
 	bq := &mockBQ{}
 
 	svc := service.NewService(bt, bq)
 
-	err := svc.Ping(context.Background())
+	msg, err := svc.Ping(context.Background())
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Big Table")
+	assert.Equal(t, "Big Table Connection Error", msg.Message)
 }
