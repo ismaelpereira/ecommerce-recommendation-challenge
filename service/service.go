@@ -20,16 +20,16 @@ func NewService(btRepository BigTableRepository, bqRepository BigQueryRepository
 	}
 }
 
-func (s *Service) CreateEvent(ctx context.Context, event types.CreateEventRequest) error {
-	err := s.bqRepository.CreateEvent(ctx, event)
+func (s *Service) CreateEvent(ctx context.Context, event types.CreateEventRequest) (*types.Event, error) {
+	evt, err := s.bqRepository.CreateEvent(ctx, event)
 	if err != nil {
-		return fmt.Errorf("Error creating event on Big Query: %w", err)
+		return nil, fmt.Errorf("Error creating event on Big Query: %w", err)
 	}
 	err = s.btRepository.CreateEvent(ctx, event)
 	if err != nil {
-		return fmt.Errorf("Error creating event on Big Table: %w", err)
+		return nil, fmt.Errorf("Error creating event on Big Table: %w", err)
 	}
-	return nil
+	return evt, nil
 }
 
 func (s *Service) GetTopProductsFromStore(ctx context.Context, storeID string, windowHours int) (*types.GetTopProductsFromStoreResponse, error) {

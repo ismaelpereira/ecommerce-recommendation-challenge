@@ -3,8 +3,10 @@ package repository
 import (
 	"context"
 	"fmt"
+	"log"
 
 	cloudbq "cloud.google.com/go/bigquery"
+	"github.com/google/uuid"
 	"github.com/ismaelpereira/ecommerce-recommendation-challenge/types"
 	"google.golang.org/api/iterator"
 )
@@ -19,9 +21,19 @@ func NewBqRepository(client *cloudbq.Client) *BqRepository {
 	}
 }
 
-func (r *BqRepository) CreateEvent(ctx context.Context, event types.CreateEventRequest) error {
+func (r *BqRepository) CreateEvent(ctx context.Context, event types.CreateEventRequest) (*types.Event, error) {
+	evt := types.Event{
+		ID:        uuid.NewString(),
+		UserID:    event.UserID,
+		ProductID: event.ProductID,
+		StoreID:   event.StoreID,
+		EventType: event.EventType,
+		Timestamp: event.Timestamp,
+	}
+
 	query := r.client.Query(`
 		INSERT INTO ecommerce_events.events(
+				event_id,
 				user_id,
 				product_id,
 				store_id,
@@ -29,6 +41,7 @@ func (r *BqRepository) CreateEvent(ctx context.Context, event types.CreateEventR
 				timestamp
 		)
 		VALUES(
+			@event_id,
 			@user_id,
 			@product_id,
 			@store_id,
@@ -36,29 +49,31 @@ func (r *BqRepository) CreateEvent(ctx context.Context, event types.CreateEventR
 			@timestamp
 		)
 	`)
+
 	query.Parameters = []cloudbq.QueryParameter{
-		{Name: "user_id", Value: event.UserID},
-		{Name: "product_id", Value: event.ProductID},
-		{Name: "store_id", Value: event.StoreID},
-		{Name: "event_type", Value: event.EventType},
-		{Name: "timestamp", Value: event.Timestamp},
+		{Name: "event_id", Value: evt.ID},
+		{Name: "user_id", Value: evt.UserID},
+		{Name: "product_id", Value: evt.ProductID},
+		{Name: "store_id", Value: evt.StoreID},
+		{Name: "event_type", Value: evt.EventType},
+		{Name: "timestamp", Value: evt.Timestamp},
 	}
 
 	job, err := query.Run(ctx)
 	if err != nil {
-		return fmt.Errorf("Error on Insert RUN into Biquery: %w", err)
+		return nil, fmt.Errorf("Error on Insert RUN into Biquery: %w", err)
 	}
 
 	status, err := job.Wait(ctx)
 	if err != nil {
-		return fmt.Errorf("Error on Insert Wait into Biquery: %w", err)
+		return nil, fmt.Errorf("Error on Insert Wait into Biquery: %w", err)
 	}
 
 	if err := status.Err(); err != nil {
-		return fmt.Errorf("Error inserting event into Biquery: %w", err)
+		return nil, fmt.Errorf("Error inserting event into Biquery: %w", err)
 	}
 
-	return nil
+	return &evt, nil
 }
 
 func (r *BqRepository) GetTopProductsFromStore(ctx context.Context, storeID string, windowHours int) ([]types.Product, error) {
@@ -119,6 +134,8 @@ func (r *BqRepository) Ping(ctx context.Context) error {
 	if err != nil && err != iterator.Done {
 		return fmt.Errorf("Error pinging Big Query: %w", err)
 	}
+
+	log.Println(row)
 
 	return nil
 }

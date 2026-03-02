@@ -13,7 +13,7 @@ type BigTableRepository interface {
 }
 
 type BigQueryRepository interface {
-	CreateEvent(ctx context.Context, event types.CreateEventRequest) error
+	CreateEvent(ctx context.Context, event types.CreateEventRequest) (*types.Event, error)
 	GetTopProductsFromStore(ctx context.Context, storeID string, windowHours int) ([]types.Product, error)
 	Ping(ctx context.Context) error
 }

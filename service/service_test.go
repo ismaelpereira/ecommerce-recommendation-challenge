@@ -37,8 +37,8 @@ type mockBQ struct {
 	pingErr   error
 }
 
-func (m *mockBQ) CreateEvent(ctx context.Context, event types.CreateEventRequest) error {
-	return m.createErr
+func (m *mockBQ) CreateEvent(ctx context.Context, event types.CreateEventRequest) (*types.Event, error) {
+	return &types.Event{}, m.createErr
 }
 
 func (m *mockBQ) GetTopProductsFromStore(ctx context.Context, storeID string, windowHours int) ([]types.Product, error) {
@@ -58,9 +58,10 @@ func TestCreateEvent_Success(t *testing.T) {
 
 	svc := service.NewService(bt, bq)
 
-	err := svc.CreateEvent(context.Background(), types.CreateEventRequest{})
+	evt, err := svc.CreateEvent(context.Background(), types.CreateEventRequest{})
 
 	assert.NoError(t, err)
+	assert.NotNil(t, evt)
 }
 
 func TestCreateEvent_BigQueryFails(t *testing.T) {
@@ -69,10 +70,11 @@ func TestCreateEvent_BigQueryFails(t *testing.T) {
 
 	svc := service.NewService(bt, bq)
 
-	err := svc.CreateEvent(context.Background(), types.CreateEventRequest{})
+	evt, err := svc.CreateEvent(context.Background(), types.CreateEventRequest{})
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Big Query")
+	assert.Nil(t, evt)
 }
 
 func TestCreateEvent_BigTableFails(t *testing.T) {
@@ -81,10 +83,11 @@ func TestCreateEvent_BigTableFails(t *testing.T) {
 
 	svc := service.NewService(bt, bq)
 
-	err := svc.CreateEvent(context.Background(), types.CreateEventRequest{})
+	evt, err := svc.CreateEvent(context.Background(), types.CreateEventRequest{})
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Big Table")
+	assert.Nil(t, evt)
 }
 
 func TestGetTopProductsFromStore_Success(t *testing.T) {
