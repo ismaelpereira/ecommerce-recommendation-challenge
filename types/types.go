@@ -7,7 +7,7 @@ type CreateEventRequest struct {
 	ProductID string    `json:"product_id" binding:"required"`
 	StoreID   string    `json:"store_id" binding:"required"`
 	EventType string    `json:"event_type" binding:"required,oneof='view' 'add_to_cart' 'purchase'"`
-	Timestamp time.Time `json:"timestamp"`
+	Timestamp time.Time `json:"timestamp" binding:"required"`
 }
 
 type GetTopProductsFromStoreResponse struct {
