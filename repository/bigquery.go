@@ -12,12 +12,16 @@ import (
 )
 
 type BqRepository struct {
-	client *cloudbq.Client
+	client      *cloudbq.Client
+	datasetName string
+	tableName   string
 }
 
-func NewBqRepository(client *cloudbq.Client) *BqRepository {
+func NewBqRepository(client *cloudbq.Client, datasetName string, tableName string) *BqRepository {
 	return &BqRepository{
-		client: client,
+		client:      client,
+		datasetName: datasetName,
+		tableName:   tableName,
 	}
 }
 
@@ -31,8 +35,8 @@ func (r *BqRepository) CreateEvent(ctx context.Context, event types.CreateEventR
 		Timestamp: event.Timestamp,
 	}
 
-	query := r.client.Query(`
-		INSERT INTO ecommerce_events.events(
+	query := r.client.Query(fmt.Sprintf(`
+		INSERT INTO %s.%s(
 				event_id,
 				user_id,
 				product_id,
@@ -48,7 +52,7 @@ func (r *BqRepository) CreateEvent(ctx context.Context, event types.CreateEventR
 			@event_type,
 			@timestamp
 		)
-	`)
+	`, r.datasetName, r.tableName))
 
 	query.Parameters = []cloudbq.QueryParameter{
 		{Name: "event_id", Value: evt.ID},
@@ -77,8 +81,8 @@ func (r *BqRepository) CreateEvent(ctx context.Context, event types.CreateEventR
 }
 
 func (r *BqRepository) GetTopProductsFromStore(ctx context.Context, storeID string, windowHours int) ([]types.Product, error) {
-	dataset := r.client.Dataset("ecommerce_events")
-	table := dataset.Table("events")
+	dataset := r.client.Dataset(r.datasetName)
+	table := dataset.Table(r.tableName)
 
 	queryStr := fmt.Sprintf(`
 		SELECT product_id, COUNT(event_id) AS view_count

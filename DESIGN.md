@@ -21,7 +21,6 @@ The table schema was the following
 
 - event_id -> I put a UUID because usualy I used sequencial numbers to be fast to read, but on the documentation nothing like this was there. I am generating this on the application level too so we can easily return on the request with the 201 code.
 
-
 - timestamp -> I put as a default value the current date, but on the request is necessary so I also treat this on the code
 
 ### Partitioning
@@ -67,36 +66,53 @@ The key for the row on Bigtable is `user#{user_id}#revts#{reverse_timestamp}`.Be
 
 The tradeoff is that we can't query by specific product or store, but Big Query is handling this. We can also not search by event_id, but again, big query are going to handle this, if we want to guarantee uniqueness we can have a key `#event_id` as a prefix or suffix.
 
-**Why Reverse Timestamp?** 
+**Why Reverse Timestamp?**
 
 Reverse timestamp will guarantee the last events appears first. This change the structure to a LIFO, instead of a FIFO too
 
 ## Error Handling strategy
 
-I choose to treat most of the errors and for the query parameters explicity send the errors, not use default value for limit or for the amount of hours. 
+I choose to treat most of the errors and for the query parameters explicity send the errors, not use default value for limit or for the amount of hours.
 
 This causes 2 problems:
 
 - On the error we explicity say the query parameter we are using (can be security issue)
 - We will need to have a Good documentation, the API will be truncated for the user in case of setup.
 
-**What happens if the Bigtable write succeeds but BigQuery write fails?**
+**What happens if the BigQuery write succeeds but BigTable write fails?**
 
-With what we have now, we are going to have inconsistent information, unfortunally. But on production I will probably add a event ingestion via Pub/Sub, write only on the Big Query and send to Big Table, so te Big Query is our source of truth. And to avoid problems we can add dead letter queue, with strong retry policy and send the event_id trought the Pub/Sub and use as a idempotency key, so we will not process the same event twice. 
+With what we have now, we are going to have inconsistent information, unfortunally. But on production I will probably add a event ingestion via Pub/Sub, write only on the Big Query and send to Big Table, so te Big Query is our source of truth. And to avoid problems we can add dead letter queue, with strong retry policy and send the event_id trought the Pub/Sub and use as a idempotency key, so we will not process the same event twice.
 
 ## What you’d add with more time
 
 If I have more time I will Implement this as a separated API, Dockerize everything for local run, with a strong `docker-compose.yml` and deeper tests (This is something I already mention I need to improve with Golang).
 
-To be production ready we can also add a cloud run deploy with CI/CD, but this will have costs to use Big Table on the GCP Project. 
+To be production ready we can also add a cloud run deploy with CI/CD, but this will have costs to use Big Table on the GCP Project.
 
 I think I will change Gin Gonic to the Framework you guys use too.
 
 I wrote this before write tests, now checking how can I write the services unit tests I will create the interfaces like I did with the service, so we can easily mock the functions and write more tests.
 
+## Environment Variables
+
+```bash
+# Project Config
+PROJECT_ID=
+
+# Bigtable Config
+BIGTABLE_INSTANCE=
+BIGTABLE_TABLE=
+BIGTABLE_FAMILY=
+
+#Bigquery Config
+BIGQUERY_DATASET=
+BIGQUERY_TABLE=
+```
+Right now I made a structure like this, because we only have one single table for Big Query and Big Table, on a production environment I would put something like BIGTABLE_<RESOURCE>_TABLE, so in this case, BIGTABLE_EVENTS_TABLE to be more explicit, but since we are going to work with Microsservices, it will be good to split trought different domains each service to not create a lot of responsability and avoid grow to much this environemnts variable to make the deploy easier and maintainable. 
+
+
 ## Small Conclusion
 
-I really liked the test, found very interesting the use case. I could see this analytics part of an ecommerce is way bigger than I tougth. 
+I really liked the test, found very interesting the use case. I could see this analytics part of an ecommerce is way bigger than I tougth.
 
 I learned the basic on how to implement Big Query and Big Table and why each one is important.
-
