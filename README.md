@@ -71,7 +71,7 @@ Built with:
 
 ## Get Top Products Per Store
 
-**GET /analytics/top-products?store_id=<store_id>&window_hours=<number_of_hours>**
+**GET /analytics/top-products?store_id=<store_id>&hours=<number_of_hours>**
 
 ### Behavior
 
