@@ -117,7 +117,9 @@ cbt -instance=local-instance createtable events
 cbt -instance=local-instance createfamily events events
 ```
 
-4. Run the service
+4. Create a `.env` file following `.env.example` 
+
+5. Run the service
 
 ```bash
 go run main.go
