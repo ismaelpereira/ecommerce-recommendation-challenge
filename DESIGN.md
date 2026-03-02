@@ -93,6 +93,8 @@ I think I will change Gin Gonic to the Framework you guys use too.
 
 I wrote this before write tests, now checking how can I write the services unit tests I will create the interfaces like I did with the service, so we can easily mock the functions and write more tests.
 
+Since tests are something I need to improve in Golang, I will write more tests on the handlers, and create a integration test to be more complete and safer to go to production, but for this test I want to be transparent I lack on this. But I will study and on the next few days I will be changing this. 
+
 ## Environment Variables
 
 ```bash
