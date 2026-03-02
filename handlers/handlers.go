@@ -3,7 +3,6 @@ package handlers
 import (
 	"log"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ismaelpereira/ecommerce-recommendation-challenge/service"
@@ -26,10 +25,6 @@ func (h *Handler) CreateEvent(c *gin.Context) {
 	if err := c.ShouldBindJSON(&event); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
-	}
-
-	if event.Timestamp.IsZero() {
-		event.Timestamp = time.Now()
 	}
 
 	evt, err := h.service.CreateEvent(ctx, event)
